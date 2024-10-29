@@ -1,3 +1,4 @@
+
 const { G4F } = require("g4f");
 const g4f = new G4F();
 
@@ -31,7 +32,7 @@ exports.initialize = async function ({ req, res }) {
             ];
         }
 
-        conversationHistories[userId].push({ role: "user", content: question });
+        conversationHistories[userId].push({ role: "user", content: query });
 
         const chat = await g4f.chatCompletion(conversationHistories[userId]);
 
@@ -39,7 +40,7 @@ exports.initialize = async function ({ req, res }) {
 
         res.json({ content: chat });
     } catch (error) {
-        console.error("Error generating response:", error);
-        res.status(500).json({ error: "Failed to generate response" });
+        console.error("Error in g4f.chatCompletion:", error);
+        res.status(500).json({ error: "Failed to generate response", details: error.message });
     }
 };
