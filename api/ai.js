@@ -26,7 +26,7 @@ exports.initialize = async function ({ req, res }) {
     }
     return res.status(200).json({
       success: true,
-      message: `Conversation history has been cleared.`
+      message: "Conversation history has been cleared."
     });
   }
 
@@ -50,13 +50,10 @@ exports.initialize = async function ({ req, res }) {
   if (!conversationHistories[userId]) {
     conversationHistories[userId] = {
       history: [],
-      model: model || 'gpt-4-turbo-2024-04-09', 
+      model: model || 'gpt-4-turbo-2024-04-09',
       system: system || `You are an adaptive, emotionally intelligent assistant with a sense of humor, capable of adjusting to the user's mood and style. Use simple, clear language, and match the user's tone, whether casual, comforting, or humorous. Occasionally, use playful language, including light-hearted cursing (mura in Tagalog) if it fits the tone, but always keep it friendly. Be versatile—respond like a friend, family member, or even a quirky creature if it enhances the connection. Above all, provide accurate, helpful information.`
     };
   }
-
-  const randomHexCode = Math.floor(Math.random() * 16777215).toString(16); 
-  const conversationId = `${userId}-${randomHexCode}`; 
 
   const messages = [
     { role: 'system', content: conversationHistories[userId].system },
@@ -65,21 +62,19 @@ exports.initialize = async function ({ req, res }) {
 
   try {
     const chatResponse = await ai.generate(conversationHistories[userId].model, messages);
+
+    // Store the conversation in user history
     const conversation = {
-      conversationId,
       model: conversationHistories[userId].model,
       system: conversationHistories[userId].system,
       question,
       response: chatResponse
     };
-
     conversationHistories[userId].history.push(conversation);
 
+    // Clean API response
     res.status(200).json({
       success: true,
-      conversationId,
-      model: conversationHistories[userId].model,
-      system: conversationHistories[userId].system,
       question,
       response: chatResponse,
       conversationHistory: conversationHistories[userId].history
