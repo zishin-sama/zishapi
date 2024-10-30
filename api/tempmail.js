@@ -31,7 +31,7 @@ exports.initialize = async (req, res) => {
 
 	// Handle /tempmail?prompt=inbox&email=<email> to check inbox
 	if (prompt === 'inbox') {
-		res.setHeader('Content-Type', 'application/json');
+		res.header('Content-Type', 'application/json');
 		if (!email || !domains.some(d => email.endsWith(`@${d}`))) {
 			return res.status(400).send(
 				JSON.stringify({ error: 'Invalid or missing email. Please provide a valid temporary email.' }, null, 2)
@@ -44,7 +44,7 @@ exports.initialize = async (req, res) => {
 			const inbox = (await axios.get(`https://www.1secmail.com/api/v1/?action=getMessages&login=${username}&domain=${domain}`)).data;
 
 			if (!inbox.length) {
-				return res.send(
+				return res.status(404).send(
 					JSON.stringify({ message: 'Inbox is empty.' }, null, 2)
 				);
 			}
@@ -64,7 +64,7 @@ exports.initialize = async (req, res) => {
 				}
 			});
 		} catch (error) {
-			res.setHeader('Content-Type', 'application/json');
+			res.header('Content-Type', 'application/json');
 			return res.send(
 				JSON.stringify({ error: 'Error fetching inbox or email content.' }, null, 2)
 			);
