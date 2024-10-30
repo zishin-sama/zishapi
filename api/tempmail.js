@@ -13,15 +13,15 @@ const domains = ["rteet.com", "1secmail.com", "1secmail.org", "1secmail.net", "w
 // Stores generated email addresses
 let tempEmail = null;
 
-exports.initialize = async function (req, res) {
-	res.setHeader('Content-Type', 'application/json');
+exports.initialize = async (req, res) => {
 	const { prompt, email } = req.query;
 
 	// Handle /tempmail?prompt=gen to generate a temporary email
 	if (prompt === 'gen') {
+		res.setHeader('Content-Type', 'application/json');
 		const domain = domains[Math.floor(Math.random() * domains.length)];
 		const username = Math.random().toString(36).slice(2, 10);
-		tempEmail = `zsh${username}@${domain}`;
+		tempEmail = `${username}@${domain}`;
 
 		return res.send(
 			JSON.stringify({ message: `Temporary Email generated: ${tempEmail}` }, null, 2)
@@ -30,6 +30,7 @@ exports.initialize = async function (req, res) {
 
 	// Handle /tempmail?prompt=inbox&email=<email> to check inbox
 	if (prompt === 'inbox') {
+		res.setHeader('Content-Type', 'application/json');
 		if (!email || !domains.some(d => email.endsWith(`@${d}`))) {
 			return res.send(
 				JSON.stringify({ error: 'Invalid or missing email. Please provide a valid temporary email.' }, null, 2)
@@ -62,6 +63,7 @@ exports.initialize = async function (req, res) {
 				}
 			});
 		} catch (error) {
+			res.setHeader('Content-Type', 'application/json');
 			return res.send(
 				JSON.stringify({ error: 'Error fetching inbox or email content.' }, null, 2)
 			);
@@ -69,6 +71,7 @@ exports.initialize = async function (req, res) {
 	}
 
 	// Handle invalid prompt values
+	res.setHeader('Content-Type', 'application/json');
 	return res.send(
 		JSON.stringify({ error: 'Invalid usage. Use prompt=gen or prompt=inbox with a valid email address.' }, null, 2)
 	);
