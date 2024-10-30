@@ -8,7 +8,7 @@ exports.config = {
     author: 'Zishin Sama',
     description: 'Chat with ChatGPT',
     category: 'ai',
-    usage: ['/gpt?q=hi&id=1']
+    usage: ['/gpt?prompt=hi&id=1']
 };
 
 exports.initialize = async function ({ req, res }) {
@@ -17,7 +17,7 @@ exports.initialize = async function ({ req, res }) {
         const { prompt, id } = req.query;
 
         // Validate that both 'q' and 'id' are provided
-        if (!|| !id) {
+        if (!prompt || !id) {
             res.setHeader('Content-Type', 'application/json');
             return res.status(400).send(JSON.stringify({
                 data: {
