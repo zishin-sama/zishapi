@@ -1,5 +1,5 @@
 const ai = require('unlimited-ai');
-const fs = require('fs').promises; // Use fs.promises for async/await
+const fs = require('fs').promises;
 const path = require('path');
 
 const models = new Set([
@@ -10,6 +10,7 @@ const models = new Set([
 ]);
 
 const conversationHistoryFile = path.join(__dirname, 'conversationHistories.json');
+let conversationHistories = {};
 
 // Load conversation histories from the file
 async function loadConversationHistories() {
@@ -17,16 +18,15 @@ async function loadConversationHistories() {
     const data = await fs.readFile(conversationHistoryFile, 'utf8');
     return JSON.parse(data);
   } catch (error) {
-    // If file doesn't exist or another error occurs, return an empty object
     console.error("Error loading conversation histories:", error);
     return {};
   }
 }
 
 // Save conversation histories to the file
-async function saveConversationHistories(histories) {
+async function saveConversationHistories() {
   try {
-    await fs.writeFile(conversationHistoryFile, JSON.stringify(histories, null, 2));
+    await fs.writeFile(conversationHistoryFile, JSON.stringify(conversationHistories, null, 2));
   } catch (error) {
     console.error("Error saving conversation histories:", error);
   }
@@ -37,27 +37,16 @@ exports.config = {
   author: 'Zishin Sama',
   description: 'Advanced API for dynamic text generation using various AI models',
   category: 'ai',
-  usage: ['/ai?q=hi&id=1']
+  usage: ['/ai?q=hi&id=100']
 };
 
 exports.initialize = async function ({ req, res }) {
   const { q: question, id: userId, model, system } = req.query;
 
-  if (question && question.toLowerCase() === 'clear') {
-    const conversationHistories = await loadConversationHistories();
-    delete conversationHistories[userId];
-    await saveConversationHistories(conversationHistories);
-    res.setHeader('Content-Type', 'application/json');
-    return res.status(200).send({
-      data: {
-        message: "Conversation history has been cleared."
-      }
-    });
-  }
-
   if (!userId || !question) {
     res.setHeader('Content-Type', 'application/json');
     return res.status(400).send({
+      status: 400,
       data: {
         error: "Missing required parameters",
         message: "Please provide 'id' (user ID) and 'q' (question) query parameters.",
@@ -66,46 +55,54 @@ exports.initialize = async function ({ req, res }) {
     });
   }
 
-  // Validate model if provided
-  const conversationHistories = await loadConversationHistories();
-  if (model && !models.has(model)) {
+  if (question.toLowerCase() === 'clear') {
+    delete conversationHistories[userId];
+    await saveConversationHistories();
     res.setHeader('Content-Type', 'application/json');
-    return res.status(400).send({
+    return res.status(200).send({
+      status: 200,
       data: {
-        error: "Invalid model selection",
-        message: `The model '${model}' is not supported. Please select from the available models.`,
-        availableModels: Array.from(models)
+        message: "Conversation history has been cleared."
       }
     });
   }
 
+  // Initialize or retrieve user's conversation history
   if (!conversationHistories[userId]) {
     conversationHistories[userId] = {
       history: [],
-      model: model || 'gpt-4-turbo-2024-04-09'
+      model: model && models.has(model) ? model : 'gpt-4-turbo-2024-04-09'
     };
+  } else if (model && models.has(model) && model !== conversationHistories[userId].model) {
+    // Update model if a new valid one is provided
+    conversationHistories[userId].model = model;
   }
 
+  const userConversation = conversationHistories[userId];
+
+  // Prepare messages for AI, including history
   const messages = [
+    ...(system ? [{ role: 'system', content: system }] : []),
+    ...userConversation.history.flatMap(conv => [
+      { role: 'user', content: conv.question },
+      { role: 'assistant', content: conv.response }
+    ]),
     { role: 'user', content: question }
   ];
 
   try {
-    const chatResponse = await ai.generate(conversationHistories[userId].model, messages);
+    const chatResponse = await ai.generate(userConversation.model, messages);
 
-    // Store the conversation in user history
-    const conversation = {
-      question,
-      response: chatResponse
-    };
-    conversationHistories[userId].history.push(conversation);
+    // Store the new conversation in user history
+    userConversation.history.push({ question, response: chatResponse });
 
     // Save updated histories to the file
-    await saveConversationHistories(conversationHistories);
+    await saveConversationHistories();
 
     // Clean API response
     res.setHeader('Content-Type', 'application/json');
     res.status(200).json({
+      status: 200,
       data: {
         query: question,
         response: chatResponse,
@@ -116,6 +113,7 @@ exports.initialize = async function ({ req, res }) {
     console.error("Error in AI response generation:", error);
     res.setHeader('Content-Type', 'application/json');
     res.status(500).send({
+      status: 500,
       data: {
         error: "Internal Server Error",
         message: "An unexpected error occurred during AI response generation. Please try again later.",
