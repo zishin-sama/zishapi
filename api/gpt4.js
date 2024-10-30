@@ -69,7 +69,7 @@ exports.initialize = async function ({ req, res }) {
 
         // Return the AI response
         res.setHeader('Content-Type', 'application/json');
-        res.send(JSON.stringify({
+        res.status(200).send(JSON.stringify({
             data: {
                 prompt,
                 response: chat,
