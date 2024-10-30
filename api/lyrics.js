@@ -1,8 +1,4 @@
-const express = require('express');
 const { fetchQueryDetails, fetchLyrics } = require('searchlyrics');
-
-const app = express();
-const port = 3000;
 
 // Exporting config for the command
 exports.config = {
@@ -32,7 +28,7 @@ exports.initialize = async function ({ req, res }) {
     if (queryResponse.status !== 200 || !queryResponse.data.length) {
       return res.status(404).header('Content-Type', 'application/json').send(
         JSON.stringify({
-          data: { error: 'Song not found' }
+          data: { error: 'Lyrics not found' }
         }, null, 2)
       );
     }
@@ -53,8 +49,8 @@ exports.initialize = async function ({ req, res }) {
           releaseDate: songDetails.releaseDate,
           thumbnail: songDetails.thumbnail,
           image: lyricsResponse.image
-        }
-        author: exports.config.author;
+        },
+        author: exports.config.author
       }, null, 2)
     );
   } catch (error) {
@@ -65,4 +61,4 @@ exports.initialize = async function ({ req, res }) {
       }, null, 2)
     );
   }
-});
+};
