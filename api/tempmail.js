@@ -72,8 +72,8 @@ exports.initialize = async (req, res) => {
 	}
 
 	// Handle invalid prompt values
-	res.setHeader('Content-Type', 'application/json');
-	return res.send(
+	res.header('Content-Type', 'application/json');
+	return res.status(400).send(
 		JSON.stringify({ error: 'Invalid usage. Use prompt=gen or prompt=inbox with a valid email address.' }, null, 2)
 	);
 };
