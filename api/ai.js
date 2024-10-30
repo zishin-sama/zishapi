@@ -1,6 +1,8 @@
 const ai = require('unlimited-ai');
 const fs = require('fs').promises;
 const path = require('path');
+const util = require('util');
+const execAsync = util.promisify(exec); 
 
 const models = new Set([
   'gpt-4o-mini-free', 'gpt-4o-mini', 'gpt-4o-free', 'gpt-4-turbo-2024-04-09',
@@ -37,7 +39,7 @@ exports.config = {
   author: 'Zishin Sama',
   description: 'Advanced API for dynamic text generation using various AI models',
   category: 'ai',
-  usage: ['/ai?q=hi&id=100']
+  usage: '/ai?q=hi&id=100'
 };
 
 exports.initialize = async function ({ req, res }) {
@@ -45,26 +47,26 @@ exports.initialize = async function ({ req, res }) {
 
   if (!userId || !question) {
     res.setHeader('Content-Type', 'application/json');
-    return res.status(400).send({
+    return res.status(400).send(JSON.stringify({
       status: 400,
       data: {
         error: "Missing required parameters",
-        message: "Please provide 'id' (user ID) and 'q' (question) query parameters.",
+        message: "Please provide 'id' and 'q' query parameters.",
         exampleUsage: "/ai?q=Hello&id=100&model=gpt-4-turbo-2024-04-09&system=You%20are%20a%20helpful%20assistant"
       }
-    });
+    }, null, 2));
   }
 
   if (question.toLowerCase() === 'clear') {
     delete conversationHistories[userId];
     await saveConversationHistories();
     res.setHeader('Content-Type', 'application/json');
-    return res.status(200).send({
+    return res.status(200).send(JSON.stringify({
       status: 200,
       data: {
         message: "Conversation history has been cleared."
       }
-    });
+    }, null, 2));
   }
 
   // Initialize or retrieve user's conversation history
@@ -101,25 +103,25 @@ exports.initialize = async function ({ req, res }) {
 
     // Clean API response
     res.setHeader('Content-Type', 'application/json');
-    res.status(200).json({
+    res.status(200).send(JSON.stringify({
       status: 200,
       data: {
         query: question,
         response: chatResponse,
         author: exports.config.author
       }
-    });
+    }, null, 2));
   } catch (error) {
     console.error("Error in AI response generation:", error);
     res.setHeader('Content-Type', 'application/json');
-    res.status(500).send({
+    res.status(500).send(JSON.stringify({
       status: 500,
       data: {
         error: "Internal Server Error",
         message: "An unexpected error occurred during AI response generation. Please try again later.",
         errorDetails: process.env.NODE_ENV === 'development' ? error.message : undefined
       }
-    });
+    }, null, 2));
   }
 };
 
@@ -127,3 +129,16 @@ exports.initialize = async function ({ req, res }) {
 (async () => {
   conversationHistories = await loadConversationHistories();
 })();
+
+// Write histories to file when the server is shutting down
+process.on('SIGINT', async () => {
+  console.log('Server is shutting down. Writing conversation histories to file...');
+  await saveConversationHistories();
+  process.exit(0);
+});
+
+process.on('SIGTERM', async () => {
+  console.log('Server is being terminated. Writing conversation histories to file...');
+  await saveConversationHistories();
+  process.exit(0);
+});
