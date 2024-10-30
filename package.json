@@ -25,6 +25,7 @@
     "useragent": "^2.3.0",
     "searchlyrics": "^1.0.2",
     "cobalt-api": "^1.0.0",
-    "nexo-aio-downloader": "^1.4.1"
+    "nexo-aio-downloader": "^1.4.1",
+    "lyrics-finder": "^21.7.0"
   }
 }
