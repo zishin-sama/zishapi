@@ -4,7 +4,7 @@ exports.config = {
 	author: 'Zishin Sama',
 	description: 'Get temporary email',
 	category: 'tools',
-	usage: ['/tempmail']
+	usage: ['/tempmail?prompt=gen']
 };
 
 // Domains available for temp email
