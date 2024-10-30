@@ -5,12 +5,12 @@ exports.config = {
     name: 'cooken',
     description: 'Get Facebook cookie and access token via login credentials',
     usage: ['/cooken?email=&password='],
-    author: 'coffee',
+    author: 'Zishin Sama',
     category: 'tools'
 };
 
 async function getUserCookie(email, password) {
-    const url = 'https://n.facebook.com';
+    const url = 'https://m.facebook.com';
     const loginUrl = `${url}/login.php`;
 
     try {
@@ -65,7 +65,7 @@ async function getFacebookToken(cookie) {
     }
 }
 
-exports.initialize = async (req, res) => {
+exports.initialize = async ({req, res}) => {
     const { email, password } = req.query;
 
     // Check if email and password are provided
