@@ -31,7 +31,7 @@ exports.initialize = async function ({ req, res }) {
         if (prompt.trim().toLowerCase() === "clear") {
             delete conversationHistories[id];
             res.setHeader('Content-Type', 'application/json');
-            return res.send(JSON.stringify({
+            return res.status(200).send(JSON.stringify({
                 data: {
                     message: "Conversation history has been cleared.",
                     author: exports.config.author
@@ -42,7 +42,7 @@ exports.initialize = async function ({ req, res }) {
         // Initialize conversation history if it doesn't exist for the user
         if (!conversationHistories[id]) {
             conversationHistories[id] = [
-                { role: "system", content: "You’re a friendly assistant here to help." }
+                { role: "system", content: "You are Zishin a friendly assistant. Created and trained by Zishin" }
             ];
         }
 
