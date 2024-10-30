@@ -13,7 +13,7 @@ const domains = ["rteet.com", "1secmail.com", "1secmail.org", "1secmail.net", "w
 // Stores generated email addresses
 let tempEmail = null;
 
-exports.initialize = async (req, res) => {
+exports.initialize = async function (req, res) {
 	res.setHeader('Content-Type', 'application/json');
 	const { prompt, email } = req.query;
 
