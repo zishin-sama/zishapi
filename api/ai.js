@@ -2,7 +2,7 @@ const ai = require('unlimited-ai');
 const fs = require('fs').promises;
 const path = require('path');
 const util = require('util');
-const execAsync = util.promisify(exec);
+const execAsync = util.promisify(exec); 
 
 const models = new Set([
   'gpt-4o-mini-free', 'gpt-4o-mini', 'gpt-4o-free', 'gpt-4-turbo-2024-04-09',
@@ -34,6 +34,7 @@ async function saveConversationHistories() {
   }
 }
 
+
 exports.config = {
   name: 'ai',
   author: 'Zishin Sama',
@@ -61,7 +62,7 @@ exports.initialize = async function ({ req, res }) {
 
   if (question.toLowerCase() === 'clear') {
     delete conversationHistories[userId];
-    await saveConversationHistories();
+    await saveConversationHistories();  // Immediate save on clear
     res.setHeader('Content-Type', 'application/json');
     return res.status(200).send(
       JSON.stringify({
@@ -78,14 +79,13 @@ exports.initialize = async function ({ req, res }) {
     conversationHistories[userId] = {
       history: [],
       model: model && models.has(model) ? model : 'gpt-4-turbo-2024-04-09',
-      system: system || null // Store the system role if provided
+      system: system || null  // Save system if provided
     };
   } else {
-    // Update model if a new valid one is provided
+    // Update model or system if new valid values are provided
     if (model && models.has(model) && model !== conversationHistories[userId].model) {
       conversationHistories[userId].model = model;
     }
-    // Update system role if provided; otherwise, use existing one
     if (system) {
       conversationHistories[userId].system = system;
     }
@@ -93,7 +93,7 @@ exports.initialize = async function ({ req, res }) {
 
   const userConversation = conversationHistories[userId];
 
-  // Prepare messages for AI, including history
+  // Prepare messages for AI, including history and system role
   const messages = [
     ...(userConversation.system ? [{ role: 'system', content: userConversation.system }] : []),
     ...userConversation.history.flatMap(conv => [
@@ -109,7 +109,7 @@ exports.initialize = async function ({ req, res }) {
     // Store the new conversation in user history
     userConversation.history.push({ question, response: chatResponse });
 
-    // Save updated histories to the file
+    // Save updated histories immediately after each new conversation
     await saveConversationHistories();
 
     // Clean API response
@@ -135,7 +135,7 @@ exports.initialize = async function ({ req, res }) {
           message: "An unexpected error occurred during AI response generation. Please try again later.",
           errorDetails: process.env.NODE_ENV === 'development' ? error.message : undefined
         }
-      }, null, 2)
+      })
     );
   }
 };
