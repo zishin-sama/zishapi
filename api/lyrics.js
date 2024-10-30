@@ -1,5 +1,5 @@
 const express = require('express');
-const lyricFinder = require('lyrics-finder');
+const { fetchQueryDetails, fetchLyrics } = require('searchlyrics');
 
 const app = express();
 const port = 3000;
@@ -15,13 +15,6 @@ exports.config = {
 
 // Initialize function for the lyrics command
 exports.initialize = async function ({ req, res }) {
-    const express = require('express');
-const { fetchQueryDetails, fetchLyrics } = require('searchlyrics');
-const app = express();
-const port = process.env.PORT || 3000;
-
-// Lyrics search endpoint
-app.get('/lyrics', async (req, res) => {
   const query = req.query.q;
 
   if (!query) {
