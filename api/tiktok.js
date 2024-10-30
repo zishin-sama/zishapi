@@ -2,17 +2,20 @@ const axios = require("axios");
 
 exports.config = {
     name: 'tiktok',
-    author: 'Lance Cochangco',
+    author: 'Zishin Sama',
     description: 'Download Tiktok Video',
     category: 'tools',
-    usage: ['/tiktok?url,=https://vt.tiktok.com/ZSjY1k4KH/']
+    usage: ['/tiktok?url=https://vt.tiktok.com/ZSjY1k4KH/']
 };
 
 exports.initialize = async function ({ req, res }) {
+    // Set the response header to application/json
+    res.setHeader('Content-Type', 'application/json');
+
     try {
-        const link = req.query.url; //
+        const link = req.query.url;
         if (!link) {
-            return res.status(400).json({ error: "Missing url parameter or missing value." });
+            return res.send(JSON.stringify({ error: "Missing url parameter or missing value." }, null, 2));
         }
 
         const response = await axios({
@@ -33,7 +36,7 @@ exports.initialize = async function ({ req, res }) {
 
         const videos = response.data.data.videos;
         if (videos.length === 0) {
-            return res.status(404).json({ error: "No videos found." });
+            return res.send(JSON.stringify({ error: "No videos found." }, null, 2));
         }
 
         const gywee = Math.floor(Math.random() * videos.length);
@@ -48,9 +51,10 @@ exports.initialize = async function ({ req, res }) {
             music: videorndm.music
         };
 
-        res.json(result);
+        // Send the result as a JSON response
+        res.send(JSON.stringify(result, null, 2));
     } catch (error) {
         console.error("Error fetching TikTok videos:", error);
-        res.status(500).json({ error: "Failed to fetch TikTok videos" });
+        res.send(JSON.stringify({ error: "Failed to fetch TikTok videos" }, null, 2));
     }
 };
