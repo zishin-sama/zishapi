@@ -1,8 +1,6 @@
 const ai = require('unlimited-ai');
 const fs = require('fs').promises;
 const path = require('path');
-const util = require('util');
-const execAsync = util.promisify(exec); 
 
 const models = new Set([
   'gpt-4o-mini-free', 'gpt-4o-mini', 'gpt-4o-free', 'gpt-4-turbo-2024-04-09',
