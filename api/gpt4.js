@@ -14,11 +14,10 @@ exports.config = {
 exports.initialize = async function ({ req, res }) {
     try {
         // Get query parameters
-        const question = req.query.q;
-        const userId = req.query.id;
+        const { prompt, id } = req.query;
 
         // Validate that both 'q' and 'id' are provided
-        if (!question || !userId) {
+        if (!|| !id) {
             res.setHeader('Content-Type', 'application/json');
             return res.status(400).send(JSON.stringify({
                 data: {
