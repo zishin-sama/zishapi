@@ -9,11 +9,14 @@ exports.config = {
 };
 
 exports.initialize = async function ({ req, res }) {
+    // Set the response header to application/json
+    res.setHeader('Content-Type', 'application/json');
+
     try {
         let url = req.query.url;
 
         if (!url) {
-            return res.status(400).json({ error: "Please add ?url=media_url_here" });
+            return res.send(JSON.stringify({ error: "Please add ?url=media_url_here" }, null, 2));
         }
 
         // Normalize the URL: ensure it starts with https://
@@ -25,12 +28,12 @@ exports.initialize = async function ({ req, res }) {
         const result = await cobalt.sendRequest();
 
         if (result.status) {
-            res.json({ content: result.data });
+            return res.send(JSON.stringify({ content: result.data }, null, 2));
         } else {
-            return res.status(400).json({ error: "Download failed: " + result.text });
+            return res.send(JSON.stringify({ error: "Download failed: " + result.text }, null, 2));
         }
     } catch (error) {
         console.error("Error downloading media:", error);
-        res.status(500).json({ error: "Failed to download media" });
+        return res.send(JSON.stringify({ error: "Failed to download media" }, null, 2));
     }
 };
