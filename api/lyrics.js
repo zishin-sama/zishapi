@@ -1,5 +1,5 @@
 const express = require('express');
-const lyricFinder = require('lyric-finder');
+const lyricFinder = require('lyrics-finder');
 
 const app = express();
 const port = 3000;
