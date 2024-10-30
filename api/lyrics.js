@@ -1,44 +1,46 @@
-const { fetchQueryDetails, fetchLyrics } = require('searchlyrics');
+const express = require('express');
+const lyricFinder = require('lyric-finder');
 
+const app = express();
+const port = 3000;
+
+// Exporting config for the command
 exports.config = {
     name: 'lyrics',
     author: 'Zishin Sama',
-    description: 'Search for song lyrics or details',
+    description: 'Search for song lyrics based on song title.',
     category: 'search',
-    usage: ['/lyrics?query=Last Rizzday Night Jelly House', '/lyrics?url=']
+    usage: ['/lyrics?q=Rizzler'],
 };
 
+// Initialize function for the lyrics command
 exports.initialize = async function ({ req, res }) {
-    const { query, url } = req.query;
+    const { q } = req.query; // Expecting a query like ?q=song_title
 
-    if (query) {
-        try {
-            const response = await fetchQueryDetails(query);
-            if (response.status === 200) {
-                return res.json(response.data);
-            } else {
-                return res.status(404).json({ error: "No song details found." });
-            }
-        } catch (error) {
-            console.error("Error fetching song details:", error);
-            return res.status(500).json({ error: "Failed to fetch song details." });
-        }
+    // Set the response header to application/json
+    res.setHeader('Content-Type', 'application/json');
+
+    if (!q) {
+        return res.send(JSON.stringify({ error: "Please provide a query using ?q=song_title" }, null, 2));
     }
 
-    if (url) {
-        try {
-            const data = await fetchLyrics(url);
-            return res.json({
-                lyrics: data.lyrics,
-                image: data.image
-            });
-        } catch (error) {
-            console.error("Error fetching lyrics:", error);
-            return res.status(500).json({ error: "Failed to fetch lyrics." });
-        }
-    }
+    try {
+        // Use lyricFinder to find the lyrics
+        const lyrics = await lyricFinder('', q); // No artist name provided, just the song title
 
-    return res.status(400).json({
-        error: "Please provide either ?query=song_name or ?url=any_song_lyrics_url"
-    });
+        if (!lyrics) {
+            return res.send(JSON.stringify({ error: "Lyrics not found." }, null, 2));
+        }
+
+        // Send the found lyrics in the response
+        return res.send(JSON.stringify({ lyrics }, null, 2));
+    } catch (error) {
+        console.error("Error fetching lyrics:", error);
+        return res.send(JSON.stringify({ error: "Failed to fetch lyrics." }, null, 2));
+    }
 };
+
+// Start the server
+app.listen(port, () => {
+    console.log(`Server running at http://localhost:${port}`);
+});
