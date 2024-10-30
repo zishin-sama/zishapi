@@ -54,6 +54,7 @@ exports.initialize = async function ({ req, res }) {
           thumbnail: songDetails.thumbnail,
           image: lyricsResponse.image
         }
+        author: exports.config.author;
       }, null, 2)
     );
   } catch (error) {
