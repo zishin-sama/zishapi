@@ -2,7 +2,7 @@ const ai = require('unlimited-ai');
 const fs = require('fs').promises;
 const path = require('path');
 const util = require('util');
-const execAsync = util.promisify(exec); 
+const execAsync = util.promisify(exec);
 
 const models = new Set([
   'gpt-4o-mini-free', 'gpt-4o-mini', 'gpt-4o-free', 'gpt-4-turbo-2024-04-09',
@@ -39,7 +39,7 @@ exports.config = {
   author: 'Zishin Sama',
   description: 'Advanced API for dynamic text generation using various AI models',
   category: 'ai',
-  usage: '/ai?q=hi&id=100'
+  usage: ['/ai?q=hi&id=100']
 };
 
 exports.initialize = async function ({ req, res }) {
@@ -47,44 +47,55 @@ exports.initialize = async function ({ req, res }) {
 
   if (!userId || !question) {
     res.setHeader('Content-Type', 'application/json');
-    return res.status(400).send(JSON.stringify({
-      status: 400,
-      data: {
-        error: "Missing required parameters",
-        message: "Please provide 'id' and 'q' query parameters.",
-        exampleUsage: "/ai?q=Hello&id=100&model=gpt-4-turbo-2024-04-09&system=You%20are%20a%20helpful%20assistant"
-      }
-    }, null, 2));
+    return res.status(400).send(
+      JSON.stringify({
+        status: 400,
+        data: {
+          error: "Missing required parameters",
+          message: "Please provide 'id' and 'q' query parameters.",
+          exampleUsage: "/ai?q=Hello&id=100&model=gpt-4-turbo-2024-04-09&system=You%20are%20a%20helpful%20assistant"
+        }
+      }, null, 2)
+    );
   }
 
   if (question.toLowerCase() === 'clear') {
     delete conversationHistories[userId];
     await saveConversationHistories();
     res.setHeader('Content-Type', 'application/json');
-    return res.status(200).send(JSON.stringify({
-      status: 200,
-      data: {
-        message: "Conversation history has been cleared."
-      }
-    }, null, 2));
+    return res.status(200).send(
+      JSON.stringify({
+        status: 200,
+        data: {
+          message: "Conversation history has been cleared."
+        }
+      }, null, 2)
+    );
   }
 
   // Initialize or retrieve user's conversation history
   if (!conversationHistories[userId]) {
     conversationHistories[userId] = {
       history: [],
-      model: model && models.has(model) ? model : 'gpt-4-turbo-2024-04-09'
+      model: model && models.has(model) ? model : 'gpt-4-turbo-2024-04-09',
+      system: system || null // Store the system role if provided
     };
-  } else if (model && models.has(model) && model !== conversationHistories[userId].model) {
+  } else {
     // Update model if a new valid one is provided
-    conversationHistories[userId].model = model;
+    if (model && models.has(model) && model !== conversationHistories[userId].model) {
+      conversationHistories[userId].model = model;
+    }
+    // Update system role if provided; otherwise, use existing one
+    if (system) {
+      conversationHistories[userId].system = system;
+    }
   }
 
   const userConversation = conversationHistories[userId];
 
   // Prepare messages for AI, including history
   const messages = [
-    ...(system ? [{ role: 'system', content: system }] : []),
+    ...(userConversation.system ? [{ role: 'system', content: userConversation.system }] : []),
     ...userConversation.history.flatMap(conv => [
       { role: 'user', content: conv.question },
       { role: 'assistant', content: conv.response }
@@ -103,25 +114,29 @@ exports.initialize = async function ({ req, res }) {
 
     // Clean API response
     res.setHeader('Content-Type', 'application/json');
-    res.status(200).send(JSON.stringify({
-      status: 200,
-      data: {
-        query: question,
-        response: chatResponse,
-        author: exports.config.author
-      }
-    }, null, 2));
+    res.status(200).send(
+      JSON.stringify({
+        status: 200,
+        data: {
+          query: question,
+          response: chatResponse,
+          author: exports.config.author
+        }
+      }, null, 2)
+    );
   } catch (error) {
     console.error("Error in AI response generation:", error);
     res.setHeader('Content-Type', 'application/json');
-    res.status(500).send(JSON.stringify({
-      status: 500,
-      data: {
-        error: "Internal Server Error",
-        message: "An unexpected error occurred during AI response generation. Please try again later.",
-        errorDetails: process.env.NODE_ENV === 'development' ? error.message : undefined
-      }
-    }, null, 2));
+    res.status(500).send(
+      JSON.stringify({
+        status: 500,
+        data: {
+          error: "Internal Server Error",
+          message: "An unexpected error occurred during AI response generation. Please try again later.",
+          errorDetails: process.env.NODE_ENV === 'development' ? error.message : undefined
+        }
+      }, null, 2)
+    );
   }
 };
 
