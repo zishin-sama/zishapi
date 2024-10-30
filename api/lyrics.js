@@ -15,32 +15,60 @@ exports.config = {
 
 // Initialize function for the lyrics command
 exports.initialize = async function ({ req, res }) {
-    const { q } = req.query; // Expecting a query like ?q=song_title
+    const express = require('express');
+const { fetchQueryDetails, fetchLyrics } = require('searchlyrics');
+const app = express();
+const port = process.env.PORT || 3000;
 
-    // Set the response header to application/json
-    res.setHeader('Content-Type', 'application/json');
+// Lyrics search endpoint
+app.get('/lyrics', async (req, res) => {
+  const query = req.query.q;
 
-    if (!q) {
-        return res.send(JSON.stringify({ error: "Please provide a query using ?q=song_title" }, null, 2));
+  if (!query) {
+    return res.status(400).header('Content-Type', 'application/json').send(
+      JSON.stringify({
+        data: { error: 'Query parameter "q" is required' }
+      }, null, 2)
+    );
+  }
+
+  try {
+    // Fetch song details based on query
+    const queryResponse = await fetchQueryDetails(query);
+
+    if (queryResponse.status !== 200 || !queryResponse.data.length) {
+      return res.status(404).header('Content-Type', 'application/json').send(
+        JSON.stringify({
+          data: { error: 'Song not found' }
+        }, null, 2)
+      );
     }
 
-    try {
-        // Use lyricFinder to find the lyrics
-        const lyrics = await lyricFinder('', q); // No artist name provided, just the song title
+    // Get the first result's details
+    const songDetails = queryResponse.data[0];
 
-        if (!lyrics) {
-            return res.send(JSON.stringify({ error: "Lyrics not found." }, null, 2));
+    // Fetch lyrics for the song
+    const lyricsResponse = await fetchLyrics(songDetails.lyricsPath);
+
+    // Return song details with lyrics after the artist
+    res.header('Content-Type', 'application/json').send(
+      JSON.stringify({
+        data: {
+          title: songDetails.songTitle,
+          artist: songDetails.artistName,
+          lyrics: lyricsResponse.lyrics,
+          releaseDate: songDetails.releaseDate,
+          thumbnail: songDetails.thumbnail,
+          image: lyricsResponse.image
         }
-
-        // Send the found lyrics in the response
-        return res.send(JSON.stringify({ lyrics }, null, 2));
-    } catch (error) {
-        console.error("Error fetching lyrics:", error);
-        return res.send(JSON.stringify({ error: "Failed to fetch lyrics." }, null, 2));
-    }
-};
-
-// Start the server
-app.listen(port, () => {
-    console.log(`Server running at http://localhost:${port}`);
+      }, null, 2)
+    );
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).header('Content-Type', 'application/json').send(
+      JSON.stringify({
+        data: { error: 'An error occurred while fetching lyrics' }
+      }, null, 2)
+    );
+  }
 });
