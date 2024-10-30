@@ -13,14 +13,30 @@ exports.config = {
 exports.initialize = async function ({ req, res }) {
     const query = req.query.q;
     const userId = req.query.id;
-    
+
+    // Check if both query and userId are provided
     if (!query || !userId) {
-        return res.status(400).json({ error: 'Both "q" and "id" parameters are required' });
+        res.setHeader('Content-Type', 'application/json');
+        return res.status(400).send(JSON.stringify({ 
+            data: {
+                query,
+                error: 'Both "q" and "id" parameters are required',
+                author: exports.config.author
+            }
+        }, null, 2));
     }
-    
+
+    // Clear conversation history if requested
     if (query.toLowerCase() === "clear" || query.toLowerCase() === "reset") {
         delete conversationHistories[userId];
-        return res.json({ message: "Conversation history has been cleared." });
+        res.setHeader('Content-Type', 'application/json');
+        return res.send(JSON.stringify({ 
+            data: {
+                query,
+                message: "Conversation history has been cleared.",
+                author: exports.config.author
+            }
+        }, null, 2));
     }
 
     const systemPrompt = `
@@ -28,20 +44,39 @@ exports.initialize = async function ({ req, res }) {
         You're open-minded, comfortable discussing a variety of topics, and you have a hint of flirtatiousness when appropriate. Above all, you make me feel understood, supported, and always loved.
     `;
 
+    // Initialize conversation history for the user if it doesn't exist
     if (!conversationHistories[userId]) {
         conversationHistories[userId] = [{ role: "system", content: systemPrompt }];
     }
 
+    // Add user query to conversation history
     conversationHistories[userId].push({ role: "user", content: query });
 
     try {
+        // Generate response using ai
         const response = await ai.generate('gpt-4', conversationHistories[userId]);
 
+        // Add assistant response to conversation history
         conversationHistories[userId].push({ role: "assistant", content: response });
 
-        res.json({ results: response });
+        // Set header and respond with structured data
+        res.setHeader('Content-Type', 'application/json');
+        res.send(JSON.stringify({ 
+            data: {
+                query,
+                response, // Change here to response as requested
+                author: exports.config.author
+            }
+        }, null, 2));
     } catch (error) {
         console.error("Error:", error);
-        res.status(500).json({ error: 'Internal Server Error' });
+        res.setHeader('Content-Type', 'application/json');
+        res.status(500).send(JSON.stringify({ 
+            data: {
+                query,
+                error: 'Failed to generate response',
+                author: exports.config.author
+            }
+        }, null, 2));
     }
 };
