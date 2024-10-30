@@ -14,7 +14,8 @@ const domains = ["rteet.com", "1secmail.com", "1secmail.org", "1secmail.net", "w
 let tempEmail = null;
 
 exports.initialize = async (req, res) => {
-	const { prompt, email } = req.query;
+	const prompt = req.query.prompt;
+	const email = req.query.email;
 
 	// Handle /tempmail?prompt=gen to generate a temporary email
 	if (prompt === 'gen') {
