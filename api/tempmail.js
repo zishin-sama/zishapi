@@ -33,7 +33,7 @@ exports.initialize = async (req, res) => {
 	if (prompt === 'inbox') {
 		res.setHeader('Content-Type', 'application/json');
 		if (!email || !domains.some(d => email.endsWith(`@${d}`))) {
-			return res.send(
+			return res.status(400).send(
 				JSON.stringify({ error: 'Invalid or missing email. Please provide a valid temporary email.' }, null, 2)
 			);
 		}
