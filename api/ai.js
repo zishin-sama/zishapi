@@ -20,21 +20,20 @@ exports.config = {
 exports.initialize = async function ({ req, res }) {
   const { q: question, id: userId, model, system } = req.query;
 
-  if (question && question.toLowerCase() === 'clear') {
-    if (conversationHistories[userId]) {
-      delete conversationHistories[userId];
-    }
-    return res.status(200).json({
-      success: true,
-      message: "Conversation history has been cleared."
-    });
-  }
-
   if (!userId || !question) {
     return res.status(400).json({
       error: "Missing required parameters",
       message: "Please provide 'id' (user ID) and 'q' (question) query parameters.",
       exampleUsage: "/ai?q=Hello&id=100&model=gpt-4-turbo-2024-04-09&system=You%20are%20a%20helpful%20assistant"
+    });
+  }
+
+  // Command to clear conversation history
+  if (question.toLowerCase() === 'clear') {
+    delete conversationHistories[userId];
+    return res.status(200).json({
+      success: true,
+      message: "Conversation history has been cleared."
     });
   }
 
@@ -47,6 +46,7 @@ exports.initialize = async function ({ req, res }) {
     });
   }
 
+  // Initialize or load user-specific conversation history
   if (!conversationHistories[userId]) {
     conversationHistories[userId] = {
       history: [],
@@ -55,24 +55,19 @@ exports.initialize = async function ({ req, res }) {
     };
   }
 
+  // Prepare the conversation history for the current interaction
   const messages = [
     { role: 'system', content: conversationHistories[userId].system },
+    ...conversationHistories[userId].history.map(entry => ({ role: 'user', content: entry.question })),
     { role: 'user', content: question }
   ];
 
   try {
     const chatResponse = await ai.generate(conversationHistories[userId].model, messages);
 
-    // Store the conversation in user history
-    const conversation = {
-      model: conversationHistories[userId].model,
-      system: conversationHistories[userId].system,
-      question,
-      response: chatResponse
-    };
-    conversationHistories[userId].history.push(conversation);
+    // Store the new interaction in user history
+    conversationHistories[userId].history.push({ question, response: chatResponse });
 
-    // Clean API response
     res.status(200).json({
       success: true,
       question,
