@@ -14,8 +14,7 @@ const domains = ["rteet.com", "1secmail.com", "1secmail.org", "1secmail.net", "w
 let tempEmail = null;
 
 exports.initialize = async (req, res) => {
-	const prompt = req.query.prompt;
-	const email = req.query.email;
+	const { prompt, email } = req.query;
 
 	// Handle /tempmail?prompt=gen to generate a temporary email
 	if (prompt === 'gen') {
@@ -24,14 +23,14 @@ exports.initialize = async (req, res) => {
 		const username = Math.random().toString(36).slice(2, 10);
 		tempEmail = `${username}@${domain}`;
 
-		return res.send(
+		return res.status(200).send(
 			JSON.stringify({ message: `Temporary Email generated: ${tempEmail}` }, null, 2)
 		);
 	}
 
 	// Handle /tempmail?prompt=inbox&email=<email> to check inbox
 	if (prompt === 'inbox') {
-		res.header('Content-Type', 'application/json');
+		res.setHeader('Content-Type', 'application/json');
 		if (!email || !domains.some(d => email.endsWith(`@${d}`))) {
 			return res.status(400).send(
 				JSON.stringify({ error: 'Invalid or missing email. Please provide a valid temporary email.' }, null, 2)
@@ -54,7 +53,7 @@ exports.initialize = async (req, res) => {
 			const messageData = await axios.get(`https://www.1secmail.com/api/v1/?action=readMessage&login=${username}&domain=${domain}&id=${id}`);
 			const { textBody } = messageData.data;
 
-			return res.json({
+			return res.status(200).json({
 				email: email,
 				latestMessage: {
 					from,
@@ -64,15 +63,15 @@ exports.initialize = async (req, res) => {
 				}
 			});
 		} catch (error) {
-			res.header('Content-Type', 'application/json');
-			return res.send(
+			res.setHeader('Content-Type', 'application/json');
+			return res.status(500).send(
 				JSON.stringify({ error: 'Error fetching inbox or email content.' }, null, 2)
 			);
 		}
 	}
 
 	// Handle invalid prompt values
-	res.header('Content-Type', 'application/json');
+	res.setHeader('Content-Type', 'application/json');
 	return res.status(400).send(
 		JSON.stringify({ error: 'Invalid usage. Use prompt=gen or prompt=inbox with a valid email address.' }, null, 2)
 	);
