@@ -17,11 +17,12 @@ const supportedPlatforms = {
     sfile: ["sfile.mobi"]
 };
 
+// Function to detect the platform and normalize the URL
 const detectPlatformAndNormalizeUrl = (url) => {
     const platform = Object.keys(supportedPlatforms).find(platformKey =>
         supportedPlatforms[platformKey].some(pattern => url.includes(pattern))
     );
-    
+
     if (platform) {
         if (!url.startsWith("http://") && !url.startsWith("https://")) {
             url = "https://" + url;
@@ -32,16 +33,19 @@ const detectPlatformAndNormalizeUrl = (url) => {
 };
 
 exports.initialize = async function ({ req, res }) {
+    // Set the response header to application/json
+    res.setHeader('Content-Type', 'application/json');
+
     try {
         const rawUrl = req.query.url;
 
         if (!rawUrl) {
-            return res.status(400).json({ error: "Missing 'url' parameter. url=<your_link>" });
+            return res.send(JSON.stringify({ error: "Missing 'url' parameter. url=<your_link>" }, null, 2));
         }
 
         const { platform, url } = detectPlatformAndNormalizeUrl(rawUrl);
         if (!platform) {
-            return res.status(400).json({ error: "Unsupported or invalid URL. Supported platforms: Twitter, Instagram, Facebook, TikTok, Google Drive, Sfile" });
+            return res.send(JSON.stringify({ error: "Unsupported or invalid URL. Supported platforms: Twitter, Instagram, Facebook, TikTok, Google Drive, Sfile" }, null, 2));
         }
 
         // Attempt to download the media from the detected platform
@@ -66,12 +70,13 @@ exports.initialize = async function ({ req, res }) {
                 result = await nexo.sfile(url);
                 break;
             default:
-                return res.status(400).json({ error: "Unsupported URL" });
+                return res.send(JSON.stringify({ error: "Unsupported URL" }, null, 2));
         }
 
-        res.json({ platform, content: result });
+        // Send the response with the platform and result
+        return res.send(JSON.stringify({ platform, content: result }, null, 2));
     } catch (error) {
         console.error("Error downloading media from platform:", error);
-        res.status(500).json({ error: "Failed to download media. Please ensure the URL is correct and try again." });
+        return res.send(JSON.stringify({ error: "Failed to download media. Please ensure the URL is correct and try again." }, null, 2));
     }
 };
