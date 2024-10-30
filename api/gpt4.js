@@ -7,7 +7,7 @@ exports.config = {
     name: 'gpt',
     author: 'Zishin Sama',
     description: 'Chat with ChatGPT',
-    category: 'ai',
+    category: 'AI',
     usage: ['/gpt?prompt=hi&id=1']
 };
 
