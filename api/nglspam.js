@@ -83,7 +83,7 @@ exports.initialize = async ({ req, res }) => {
         await sendPostRequest(user, message);
     }
     res.setHeader('Content-Type', 'application/json');
-    res.send(JSON.stringify({
+    res.status(200).send(JSON.stringify({
         result: {
             status: 200,
             message: `Spamming to [${user}] completed with ${successCount} success out of ${requests} attempts.`,
