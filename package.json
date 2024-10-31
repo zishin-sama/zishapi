@@ -27,6 +27,6 @@
     "cobalt-api": "^1.0.0",
     "nexo-aio-downloader": "^1.4.1",
     "lyrics-finder": "^21.7.0",
-    'uuid': '^11.0.2'
+    "uuid": "^11.0.2"
   }
 }
