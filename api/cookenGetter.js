@@ -10,7 +10,7 @@ exports.config = {
 };
 
 async function getUserCookie(email, password) {
-    const url = 'https://n.facebook.com';
+    const url = 'https://m.facebook.com';
     const loginUrl = `${url}/login.php`;
 
     try {
