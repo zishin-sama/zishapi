@@ -32,7 +32,6 @@ async function saveConversationHistories() {
   }
 }
 
-
 exports.config = {
   name: 'ai',
   author: 'Zishin Sama',
@@ -81,11 +80,23 @@ exports.initialize = async function ({ req, res }) {
     };
   } else {
     // Update model or system if new valid values are provided
+    if (model && !models.has(model)) {
+      res.setHeader('Content-Type', 'application/json');
+      return res.status(400).send(
+        JSON.stringify({
+          status: 400,
+          data: {
+            error: "Invalid model",
+            message: `The provided model '${model}' is not valid. Please choose from the available models.`
+          }
+        }, null, 2)
+      );
+    }
     if (model && models.has(model) && model !== conversationHistories[userId].model) {
       conversationHistories[userId].model = model;
     }
     if (system) {
-      conversationHistories[userId].system = system;
+      conversationHistories[userId].system = system; // Update system role
     }
   }
 
