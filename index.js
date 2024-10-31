@@ -64,7 +64,7 @@ app.get("/api-stats", async function (req, res) {
 });
 
 app.get("/", async function (req, res) {
-  res.sendFile(path.join(__dirname, "web/docs.html"));
+  res.sendFile(path.join(__dirname, "web/index.html"));
 });
 
 app.get("*", async function (req, res) {
