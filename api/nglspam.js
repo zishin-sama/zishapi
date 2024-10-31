@@ -56,6 +56,7 @@ exports.initialize = async ({ req, res }) => {
 
     // Validate required parameters
     if (!user || !message || !amount) {
+    	res.setHeader('Content-Type', 'application/json');
         return res.status(400).send(JSON.stringify({
             result: {
                 status: 400,
@@ -67,6 +68,7 @@ exports.initialize = async ({ req, res }) => {
 
     const requests = parseInt(amount, 10);
     if (isNaN(requests) || requests <= 0) {
+    	res.setHeader('Content-Type', 'application/json');
         return res.status(400).send(JSON.stringify({
             result: {
                 status: 400,
@@ -80,7 +82,7 @@ exports.initialize = async ({ req, res }) => {
     for (let i = 0; i < requests; i++) {
         await sendPostRequest(user, message);
     }
-
+    res.setHeader('Content-Type', 'application/json');
     res.send(JSON.stringify({
         result: {
             status: 200,
