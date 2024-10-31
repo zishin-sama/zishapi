@@ -1,5 +1,4 @@
 const axios = require('axios');
-const cheerio = require('cheerio');
 
 exports.config = {
     name: 'cooken',
@@ -32,7 +31,14 @@ async function getUserCookie(email, password) {
         });
 
         const response = await session.get(url);
-        const $ = cheerio.load(response.data);
+        const inspect = bs(response_body.text, 'html.parser')
+      lsd_key = inspect.find('input', {'name': 'lsd'})['value']
+      jazoest_key = inspect.find('input', {'name': 'jazoest'})['value']
+      m_ts_key = inspect.find('input', {'name': 'm_ts'})['value']
+      li_key = inspect.find('input', {'name': 'li'})['value']
+      try_number_key = inspect.find('input', {'name': 'try_number'})['value']
+      unrecognized_tries_key = inspect.find('input', {'name': 'unrecognized_tries'})['value']
+      bi_xrwh_key = inspect.find('input', {'name': 'bi_xrwh'})['value']
 
         const data = {
             lsd: $('input[name="lsd"]').val(),
