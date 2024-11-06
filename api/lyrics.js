@@ -11,9 +11,9 @@ exports.config = {
 
 // Initialize function for the lyrics command
 exports.initialize = async function ({ req, res }) {
-  const query = req.query.q;
+  const song = req.query.q;
 
-  if (!query) {
+  if (!song) {
     return res.status(400).header('Content-Type', 'application/json').send(
       JSON.stringify({
         data: { error: 'Query parameter "q" is required' }
@@ -23,7 +23,7 @@ exports.initialize = async function ({ req, res }) {
 
   try {
     // Fetch song details based on query
-    const queryResponse = await fetchQueryDetails(query);
+    const queryResponse = await fetchQueryDetails(song);
 
     if (queryResponse.status !== 200 || !queryResponse.data.length) {
       return res.status(404).header('Content-Type', 'application/json').send(
